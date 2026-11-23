@@ -1,4 +1,59 @@
 <%@ page pageEncoding="UTF-8" %>
 <%@ include file="header.jsp" %>
-<h1 class="page-title">People behind the possibilities.</h1><p class="page-subtitle">Create recruiter accounts and manage your placement community.</p><div class="row g-4"><div class="col-xl-7"><div class="panel"><div class="table-responsive"><table class="table"><thead><tr><th>Name</th><th>Email</th><th>Role</th></tr></thead><tbody><%for(var person:(List<Map<String,Object>>)request.getAttribute("users")){%><tr><td><%=Security.html(person.get("name"))%></td><td><%=Security.html(person.get("email"))%></td><td><span class="status-tag"><%=Security.html(person.get("role"))%></span></td></tr><%}%></tbody></table></div><%@ include file="pagination.jsp" %></div></div><div class="col-xl-5"><div class="panel"><h2 class="section-title">Add a person</h2><form action="<%=base%>/users" method="post"><input type="hidden" name="csrf" value="<%=Security.html(session.getAttribute("csrf"))%>"><div class="mb-3"><label class="form-label" for="name">Full name</label><input class="form-control" id="name" name="name" minlength="2" maxlength="80" required></div><div class="mb-3"><label class="form-label" for="email">Email</label><input class="form-control" id="email" name="email" type="email" maxlength="254" required></div><div class="mb-3"><label class="form-label" for="password">Initial password</label><input class="form-control" id="password" name="password" type="password" minlength="12" maxlength="100" required autocomplete="new-password"></div><div class="mb-4"><label class="form-label" for="role">Role</label><select class="form-select" id="role" name="role"><option value="recruiter">Recruiter</option><option value="student">Student</option></select></div><button class="btn btn-primary">Create account</button></form></div></div></div>
+<h1 class="page-title">People behind the possibilities.</h1>
+<p class="page-subtitle">Create recruiter accounts and manage your placement community.</p>
+<div class="row g-4">
+  <div class="col-xl-7">
+    <div class="panel">
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% for(var person:(List<Map<String,Object>>)request.getAttribute("users")){ %>
+            <tr>
+              <td><%=Security.html(person.get("name"))%></td>
+              <td><%=Security.html(person.get("email"))%></td>
+              <td><span class="status-tag"><%=Security.html(person.get("role"))%></span></td>
+            </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+      <%@ include file="pagination.jsp" %>
+    </div>
+  </div>
+  <div class="col-xl-5">
+    <div class="panel">
+      <h2 class="section-title">Add a person</h2>
+      <form action="<%=base%>/users" method="post">
+        <input type="hidden" name="csrf" value="<%=Security.html(session.getAttribute("csrf"))%>">
+        <div class="mb-3">
+          <label class="form-label" for="name">Full name</label><input
+            class="form-control" id="name" name="name" minlength="2" maxlength="80" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="email">Email</label><input
+            class="form-control" id="email" name="email" type="email" maxlength="254" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="password">Initial password</label><input
+            class="form-control" id="password" name="password" type="password" minlength="12" maxlength="100" required autocomplete="new-password">
+        </div>
+        <div class="mb-4">
+          <label class="form-label" for="role">Role</label><select
+            class="form-select" id="role" name="role"><option
+            value="recruiter">Recruiter</option><option
+            value="student">Student</option></select>
+        </div>
+        <button class="btn btn-primary">Create account</button>
+      </form>
+    </div>
+  </div>
+</div>
 <%@ include file="footer.jsp" %>

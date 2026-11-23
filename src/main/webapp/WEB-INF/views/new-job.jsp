@@ -1,4 +1,52 @@
 <%@ page pageEncoding="UTF-8" %>
 <%@ include file="header.jsp" %>
-<h1 class="page-title">Open a door to opportunity.</h1><p class="page-subtitle">Connect emerging talent with meaningful work.</p><div class="panel form-panel"><form action="<%=base%>/jobs" method="post"><input type="hidden" name="csrf" value="<%=Security.html(session.getAttribute("csrf"))%>"><div class="row g-3"><div class="col-md-6"><label class="form-label" for="title">Role title</label><input class="form-control" id="title" name="title" required minlength="3" maxlength="120"></div><div class="col-md-6"><label class="form-label" for="company">Company</label><input class="form-control" id="company" name="company" required minlength="2" maxlength="120"></div><div class="col-md-6"><label class="form-label" for="location">Location</label><input class="form-control" id="location" name="location" required minlength="2" maxlength="120"></div><div class="col-md-6"><label class="form-label" for="kind">Opportunity type</label><select class="form-select" id="kind" name="kind"><option>Internship</option><option>Job</option></select></div><div class="col-12"><label class="form-label" for="description">Role description</label><textarea class="form-control" id="description" name="description" rows="5" required minlength="20" maxlength="5000"></textarea></div><div class="col-md-6"><label class="form-label" for="stipend">Salary / stipend</label><input class="form-control" id="stipend" name="stipend" placeholder="25000 / month" required maxlength="100"></div><div class="col-md-6"><label class="form-label" for="deadline">Application deadline</label><input class="form-control" id="deadline" name="deadline" type="date" required></div><div class="col-md-6"><label class="form-label" for="min_cgpa">Minimum CGPA</label><input class="form-control" id="min_cgpa" name="min_cgpa" type="number" min="0" max="10" step="0.01" required></div><div class="col-md-6"><label class="form-label" for="branch">Eligible branch code</label><input class="form-control" id="branch" name="branch" value="ANY" required minlength="2" maxlength="80"><small class="text-secondary">Use ANY to accept every branch.</small></div><div class="col-12 mt-4"><button class="btn btn-primary">Publish opportunity</button></div></div></form></div>
+<h1 class="page-title">Open a door to opportunity.</h1>
+<p class="page-subtitle">Connect emerging talent with meaningful work.</p>
+<div class="panel form-panel">
+  <form action="<%=base%>/jobs" method="post">
+    <input type="hidden" name="csrf" value="<%=Security.html(session.getAttribute("csrf"))%>">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label" for="title">Role title</label><input
+          class="form-control" id="title" name="title" required minlength="3" maxlength="120">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="company">Company</label><input
+          class="form-control" id="company" name="company" required minlength="2" maxlength="120">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="location">Location</label><input
+          class="form-control" id="location" name="location" required minlength="2" maxlength="120">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="kind">Opportunity type</label><select
+          class="form-select" id="kind" name="kind"><option>Internship</option><option>Job</option></select>
+      </div>
+      <div class="col-12">
+        <label class="form-label" for="description">Role description</label><textarea
+          class="form-control" id="description" name="description" rows="5" required minlength="20" maxlength="5000"></textarea>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="stipend">Salary / stipend</label><input
+          class="form-control" id="stipend" name="stipend" placeholder="25000 / month" required maxlength="100">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="deadline">Application deadline</label><input
+          class="form-control" id="deadline" name="deadline" type="date" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="min_cgpa">Minimum CGPA</label><input
+          class="form-control" id="min_cgpa" name="min_cgpa" type="number" min="0" max="10" step="0.01" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label" for="branch">Eligible branch code</label><input
+          class="form-control" id="branch" name="branch" value="ANY" required minlength="2" maxlength="80"><small
+          class="text-secondary">Use ANY to accept every branch.</small>
+      </div>
+      <div class="col-12 mt-4">
+        <button class="btn btn-primary">Publish opportunity</button>
+      </div>
+    </div>
+  </form>
+</div>
 <%@ include file="footer.jsp" %>

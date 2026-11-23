@@ -1,4 +1,53 @@
 <%@ page pageEncoding="UTF-8" %>
 <%@ include file="header.jsp" %>
-<span class="eyebrow text-purple">THE NEXT CHAPTER STARTS HERE</span><h1 class="page-title">Welcome, <%=Security.html(user.get("name").toString().split(" ")[0])%>.</h1><p class="page-subtitle">A little progress today. A new possibility tomorrow.</p><section class="hero"><span class="eyebrow">BUILD A FUTURE THAT FEELS LIKE YOU</span><h2>Your ambition.<br>A world of opportunity.</h2><p>Explore roles that match your potential and take your next step with confidence.</p><a class="btn btn-primary" href="<%=base%>/jobs">Explore opportunities</a><div class="hero-art" aria-hidden="true"><div class="orbit"></div><span>✦</span><div class="orbit second"></div></div></section><div class="row g-3 mb-5"><div class="col-md-4"><div class="stat-card"><span>Open opportunities</span><strong><%=request.getAttribute("jobsCount")%></strong><small>Find a place to make your mark</small></div></div><div class="col-md-4"><div class="stat-card"><span><%=staff?"Applications received":"Your applications"%></span><strong><%=request.getAttribute("applicationsCount")%></strong><small>Every application is a first step</small></div></div><div class="col-md-4"><div class="stat-card"><span>Successful selections</span><strong><%=request.getAttribute("selectedCount")%></strong><small>Good things are taking shape</small></div></div></div><div class="section-head"><div><h2 class="section-title">Fresh possibilities</h2><p class="text-secondary mb-0">Your next chapter could begin here.</p></div><a href="<%=base%>/jobs">View all opportunities</a></div><div class="row g-3"><%var jobs=(List<Map<String,Object>>)request.getAttribute("jobs");for(var j:jobs){%><%@ include file="job-card.jsp" %><%}if(jobs.isEmpty()){%><div class="col-12"><div class="empty">No opportunities yet. Recruiters can post the first one.</div></div><%}%></div>
+<span class="eyebrow text-purple">THE NEXT CHAPTER STARTS HERE</span>
+<h1 class="page-title">Welcome, <%=Security.html(user.get("name").toString().split(" ")[0])%>.</h1>
+<p class="page-subtitle">A little progress today. A new possibility tomorrow.</p>
+<section class="hero">
+  <span class="eyebrow">BUILD A FUTURE THAT FEELS LIKE YOU</span>
+  <h2>Your ambition.<br>A world of opportunity.</h2>
+  <p>Explore roles that match your potential and take your next step with confidence.</p>
+  <a class="btn btn-primary" href="<%=base%>/jobs">Explore opportunities</a>
+  <div class="hero-art" aria-hidden="true">
+    <div class="orbit">
+    </div>
+    <span>✦</span>
+    <div class="orbit second">
+    </div>
+  </div>
+</section>
+<div class="row g-3 mb-5">
+  <div class="col-md-4">
+    <div class="stat-card">
+      <span>Open opportunities</span><strong><%=request.getAttribute("jobsCount")%></strong><small>Find a place to make your mark</small>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card">
+      <span><%=staff?"Applications received":"Your applications"%></span><strong><%=request.getAttribute("applicationsCount")%></strong><small>Every application is a first step</small>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card">
+      <span>Successful selections</span><strong><%=request.getAttribute("selectedCount")%></strong><small>Good things are taking shape</small>
+    </div>
+  </div>
+</div>
+<div class="section-head">
+  <div>
+    <h2 class="section-title">Fresh possibilities</h2>
+    <p class="text-secondary mb-0">Your next chapter could begin here.</p>
+  </div>
+  <a href="<%=base%>/jobs">View all opportunities</a>
+</div>
+<div class="row g-3">
+  <%
+    var jobs=(List<Map<String,Object>>)request.getAttribute("jobs");
+    for(var j:jobs){
+  %><%@ include file="job-card.jsp" %><% }if(jobs.isEmpty()){ %>
+  <div class="col-12">
+    <div class="empty">No opportunities yet. Recruiters can post the first one.</div>
+  </div>
+  <% } %>
+</div>
 <%@ include file="footer.jsp" %>

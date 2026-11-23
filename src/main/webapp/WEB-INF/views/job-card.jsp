@@ -1,2 +1,25 @@
 <%@ page pageEncoding="UTF-8" %>
-<article class="col-md-6 col-xl-4"><div class="job-card"><div class="company-logo"><%=Security.html(j.get("company").toString().substring(0,1))%></div><span class="job-type"><%=Security.html(j.get("kind"))%></span><p class="company-name"><%=Security.html(j.get("company"))%></p><h3><%=Security.html(j.get("title"))%></h3><p class="job-meta"><%=Security.html(j.get("location"))%> · <%=Security.html(j.get("stipend"))%></p><p class="job-description"><%=Security.html(j.get("description"))%></p><div class="criteria"><span>CGPA <%=Security.html(j.get("min_cgpa"))%>+</span><span><%=Security.html(j.get("branch"))%></span></div><div class="job-bottom"><small>Apply by <%=Security.html(j.get("deadline"))%></small><%if(role.equals("student")){%><form action="<%=base%>/apply" method="post"><input type="hidden" name="csrf" value="<%=Security.html(session.getAttribute("csrf"))%>"><input type="hidden" name="job" value="<%=j.get("id")%>"><button class="btn btn-sm btn-outline-primary">Apply now</button></form><%}else{%><span class="small text-muted">Opportunity #<%=j.get("id")%></span><%}%></div></div></article>
+<article class="col-md-6 col-xl-4">
+  <div class="job-card">
+    <div class="company-logo">
+      <%=Security.html(j.get("company").toString().substring(0,1))%>
+    </div>
+    <span class="job-type"><%=Security.html(j.get("kind"))%></span>
+    <p class="company-name"><%=Security.html(j.get("company"))%></p>
+    <h3><%=Security.html(j.get("title"))%></h3>
+    <p class="job-meta"><%=Security.html(j.get("location"))%> · <%=Security.html(j.get("stipend"))%></p>
+    <p class="job-description"><%=Security.html(j.get("description"))%></p>
+    <div class="criteria">
+      <span>CGPA <%=Security.html(j.get("min_cgpa"))%>+</span><span><%=Security.html(j.get("branch"))%></span>
+    </div>
+    <div class="job-bottom">
+      <small>Apply by <%=Security.html(j.get("deadline"))%></small><% if(role.equals("student")){ %>
+      <form action="<%=base%>/apply" method="post">
+        <input type="hidden" name="csrf" value="<%=Security.html(session.getAttribute("csrf"))%>"><input
+          type="hidden" name="job" value="<%=j.get("id")%>"><button
+          class="btn btn-sm btn-outline-primary">Apply now</button>
+      </form>
+      <% }else{ %><span class="small text-muted">Opportunity #<%=j.get("id")%></span><% } %>
+    </div>
+  </div>
+</article>

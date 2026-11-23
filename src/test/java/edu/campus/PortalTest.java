@@ -1,4 +1,5 @@
 package edu.campus;
+
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 import org.apache.catalina.startup.Tomcat;
@@ -9,33 +10,216 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.*;
 import java.io.*;
+
 public class PortalTest {
- static Tomcat tomcat;static String base;static Path temp;static Db db;static Browser student,other,recruiter,admin;static long studentId,recruiterId;
- static final String PASSWORD="Test-Passphrase-2026!";
- static class Browser{
-  final HttpClient client=HttpClient.newBuilder().cookieHandler(new CookieManager(null,CookiePolicy.ACCEPT_ALL)).followRedirects(HttpClient.Redirect.NEVER).build();String csrf;
-  HttpResponse<String> get(String route)throws Exception {var res=client.send(HttpRequest.newBuilder(URI.create(base+route)).GET().build(),HttpResponse.BodyHandlers.ofString());Matcher m=Pattern.compile("name=\"csrf\" value=\"([a-f0-9]+)\"").matcher(res.body());if(m.find())csrf=m.group(1);return res;}
-  HttpResponse<String> post(String route,Map<String,String> data)throws Exception{var values=new LinkedHashMap<>(data);if(csrf!=null)values.put("csrf",csrf);String body=values.entrySet().stream().map(e->URLEncoder.encode(e.getKey(),StandardCharsets.UTF_8)+"="+URLEncoder.encode(e.getValue(),StandardCharsets.UTF_8)).reduce((a,b)->a+"&"+b).orElse("");return client.send(HttpRequest.newBuilder(URI.create(base+route)).header("Content-Type","application/x-www-form-urlencoded").POST(HttpRequest.BodyPublishers.ofString(body)).build(),HttpResponse.BodyHandlers.ofString());}
-  HttpResponse<String> upload(byte[] bytes,String filename)throws Exception{String boundary="test-boundary-2026";ByteArrayOutputStream out=new ByteArrayOutputStream();out.write(("--"+boundary+"\r\nContent-Disposition: form-data; name=\"csrf\"\r\n\r\n"+csrf+"\r\n--"+boundary+"\r\nContent-Disposition: form-data; name=\"file\"; filename=\""+filename+"\"\r\nContent-Type: application/pdf\r\n\r\n").getBytes(StandardCharsets.UTF_8));out.write(bytes);out.write(("\r\n--"+boundary+"--\r\n").getBytes(StandardCharsets.UTF_8));return client.send(HttpRequest.newBuilder(URI.create(base+"/resume")).header("Content-Type","multipart/form-data; boundary="+boundary).POST(HttpRequest.BodyPublishers.ofByteArray(out.toByteArray())).build(),HttpResponse.BodyHandlers.ofString());}
- }
- static Browser login(String email)throws Exception{Browser b=new Browser();assertEquals(200,b.get("/login").statusCode());assertEquals(302,b.post("/login",Map.of("email",email,"password",PASSWORD)).statusCode());assertEquals(200,b.get("/dashboard").statusCode());return b;}
- @BeforeAll static void start()throws Exception{
-  temp=Files.createTempDirectory("placement-test-");System.setProperty("DB_URL","jdbc:h2:mem:portal;DB_CLOSE_DELAY=-1");System.setProperty("UPLOAD_DIR",temp.resolve("uploads").toString());System.setProperty("ADMIN_EMAIL","admin@test.edu");System.setProperty("ADMIN_PASSWORD",PASSWORD);System.setProperty("APP_ENV","development");System.setProperty("DEMO_PASSWORD","");db=new Db();db.init();studentId=db.account("Student One","student@test.edu","student",PASSWORD);db.account("Student Two","other@test.edu","student",PASSWORD);recruiterId=db.account("Recruiter","recruiter@test.edu","recruiter",PASSWORD);
-  tomcat=new Tomcat();tomcat.setBaseDir(temp.resolve("tomcat").toString());tomcat.setPort(0);tomcat.getConnector();var context=tomcat.addWebapp("",Path.of("src/main/webapp").toAbsolutePath().toString());context.setParentClassLoader(PortalTest.class.getClassLoader());tomcat.start();base="http://127.0.0.1:"+tomcat.getConnector().getLocalPort()+"/app";
-  student=login("student@test.edu");other=login("other@test.edu");recruiter=login("recruiter@test.edu");admin=login("admin@test.edu");
- }
- @AfterAll static void stop()throws Exception{if(tomcat!=null){tomcat.stop();tomcat.destroy();}if(temp!=null)try(var paths=Files.walk(temp)){paths.sorted(Comparator.reverseOrder()).forEach(p->{try{Files.deleteIfExists(p);}catch(Exception ignored){}});}}
- @Test void passwordHashing()throws Exception{String hash=Security.hash(PASSWORD);assertNotEquals(PASSWORD,hash);assertTrue(Security.verify(PASSWORD,hash));assertFalse(Security.verify("incorrect",hash));assertNotEquals(hash,Security.hash(PASSWORD));}
- @Test void loginCsrfRolesAndSession()throws Exception{Browser b=new Browser();assertEquals(403,b.post("/login",Map.of("email","student@test.edu","password",PASSWORD)).statusCode());b.get("/login");assertEquals(401,b.post("/login",Map.of("email","student@test.edu","password","wrong")).statusCode());assertEquals(403,student.get("/users").statusCode());assertEquals(403,student.get("/new-job").statusCode());assertEquals(200,admin.get("/users").statusCode());Browser fresh=login("student@test.edu");assertEquals(302,fresh.post("/logout",Map.of()).statusCode());assertEquals(302,fresh.get("/dashboard").statusCode());}
- @Test void registrationCannotEscalateAndPreventsDuplicate()throws Exception{Browser b=new Browser();b.get("/register");assertEquals(302,b.post("/register",Map.of("name","New Student","email","new@test.edu","password",PASSWORD,"role","admin")).statusCode());assertEquals("student",db.one("SELECT role FROM users WHERE email=?","new@test.edu").get("role"));Browser c=new Browser();c.get("/register");assertEquals(409,c.post("/register",Map.of("name","Duplicate","email","new@test.edu","password",PASSWORD)).statusCode());}
- @Test void validationPaginationAndEscaping()throws Exception{assertEquals(400,student.get("/jobs?page=0").statusCode());assertEquals(400,student.post("/profile",Map.of("name","Student","branch","CSE","cgpa","99","skills","")).statusCode());assertEquals(302,student.post("/profile",Map.of("name","<script>alert(1)</script>","branch","CSE","cgpa","8.4","skills","Java")).statusCode());String body=student.get("/profile").body();assertTrue(body.contains("&lt;script&gt;"));assertFalse(body.contains("value=\"<script>"));assertEquals(200,student.get("/jobs?q=%25").statusCode());}
- @Test void jobApplicationUploadAndOwnership()throws Exception{
-  student.get("/profile");assertEquals(400,student.upload("not a pdf".getBytes(),"resume.pdf").statusCode());assertEquals(400,student.upload(new byte[5*1024*1024+1],"big.pdf").statusCode());assertEquals(302,student.upload("%PDF-1.4\n%%EOF".getBytes(),"resume.pdf").statusCode());assertEquals(200,student.get("/resume").statusCode());assertEquals(403,other.get("/resume?student="+studentId).statusCode());
-  assertEquals(302,student.post("/profile",Map.of("name","Student One","branch","CSE","cgpa","8.5","skills","Java")).statusCode());
-  var fields=new HashMap<>(Map.of("title","Software Intern","company","Company","location","Remote","kind","Internship","description","A meaningful software internship for students.","min_cgpa","7","branch","CSE","stipend","20000 / month","deadline",java.time.LocalDate.now().plusDays(30).toString()));
-  assertEquals(403,student.post("/jobs",fields).statusCode());assertEquals(302,recruiter.post("/jobs",fields).statusCode());long job=((Number)db.one("SELECT MAX(id) AS id FROM jobs").get("id")).longValue();
-  assertEquals(302,student.post("/apply",Map.of("job",String.valueOf(job))).statusCode());assertEquals(409,student.post("/apply",Map.of("job",String.valueOf(job))).statusCode());assertEquals(403,other.post("/apply",Map.of("job",String.valueOf(job))).statusCode());assertEquals(200,recruiter.get("/resume?student="+studentId).statusCode());
-  long app=((Number)db.one("SELECT id FROM applications WHERE job_id=? AND student_id=?",job,studentId).get("id")).longValue();db.account("Other Recruiter","other-recruiter@test.edu","recruiter",PASSWORD);Browser r2=login("other-recruiter@test.edu");assertEquals(403,r2.post("/status",Map.of("application",String.valueOf(app),"status","Selected")).statusCode());assertEquals(302,recruiter.post("/status",Map.of("application",String.valueOf(app),"status","Shortlisted")).statusCode());assertEquals("Shortlisted",db.one("SELECT status FROM applications WHERE id=?",app).get("status"));assertEquals(200,student.get("/applications").statusCode());assertEquals(200,recruiter.get("/applications").statusCode());
- }
- @Test void allMainJspPagesRender()throws Exception{for(String route:List.of("/dashboard","/jobs","/profile","/applications"))assertEquals(200,student.get(route).statusCode(),route);assertEquals(200,recruiter.get("/new-job").statusCode());assertEquals(200,admin.get("/users").statusCode());assertEquals(404,student.get("/missing").statusCode());}
+    static Tomcat tomcat;
+    static String base;
+    static Path temp;
+    static Db db;
+    static Browser student, other, recruiter, admin;
+    static long studentId, recruiterId;
+    static final String PASSWORD = "Test-Passphrase-2026!";
+
+    static class Browser {
+        final HttpClient client = HttpClient.newBuilder()
+                .cookieHandler(new CookieManager(null, CookiePolicy.ACCEPT_ALL))
+                .followRedirects(HttpClient.Redirect.NEVER).build();
+        String csrf;
+
+        HttpResponse<String> get(String route) throws Exception {
+            var res = client.send(HttpRequest.newBuilder(URI.create(base + route)).GET().build(),
+                    HttpResponse.BodyHandlers.ofString());
+            Matcher m = Pattern.compile("name=\"csrf\" value=\"([a-f0-9]+)\"").matcher(res.body());
+            if (m.find())
+                csrf = m.group(1);
+            return res;
+        }
+
+        HttpResponse<String> post(String route, Map<String, String> data) throws Exception {
+            var values = new LinkedHashMap<>(data);
+            if (csrf != null)
+                values.put("csrf", csrf);
+            String body = values.entrySet().stream()
+                    .map(e -> URLEncoder.encode(e.getKey(), StandardCharsets.UTF_8) + "="
+                            + URLEncoder.encode(e.getValue(), StandardCharsets.UTF_8))
+                    .reduce((a, b) -> a + "&" + b).orElse("");
+            return client.send(
+                    HttpRequest.newBuilder(URI.create(base + route))
+                            .header("Content-Type", "application/x-www-form-urlencoded")
+                            .POST(HttpRequest.BodyPublishers.ofString(body)).build(),
+                    HttpResponse.BodyHandlers.ofString());
+        }
+
+        HttpResponse<String> upload(byte[] bytes, String filename) throws Exception {
+            String boundary = "test-boundary-2026";
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            out.write(("--" + boundary + "\r\nContent-Disposition: form-data; name=\"csrf\"\r\n\r\n" + csrf
+                    + "\r\n--" + boundary + "\r\nContent-Disposition: form-data; name=\"file\"; filename=\""
+                    + filename + "\"\r\nContent-Type: application/pdf\r\n\r\n")
+                    .getBytes(StandardCharsets.UTF_8));
+            out.write(bytes);
+            out.write(("\r\n--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8));
+            return client.send(
+                    HttpRequest.newBuilder(URI.create(base + "/resume"))
+                            .header("Content-Type", "multipart/form-data; boundary=" + boundary)
+                            .POST(HttpRequest.BodyPublishers.ofByteArray(out.toByteArray())).build(),
+                    HttpResponse.BodyHandlers.ofString());
+        }
+    }
+
+    static Browser login(String email) throws Exception {
+        Browser b = new Browser();
+        assertEquals(200, b.get("/login").statusCode());
+        assertEquals(302, b.post("/login", Map.of("email", email, "password", PASSWORD)).statusCode());
+        assertEquals(200, b.get("/dashboard").statusCode());
+        return b;
+    }
+
+    @BeforeAll
+    static void start() throws Exception {
+        temp = Files.createTempDirectory("placement-test-");
+        System.setProperty("DB_URL", "jdbc:h2:mem:portal;DB_CLOSE_DELAY=-1");
+        System.setProperty("UPLOAD_DIR", temp.resolve("uploads").toString());
+        System.setProperty("ADMIN_EMAIL", "admin@test.edu");
+        System.setProperty("ADMIN_PASSWORD", PASSWORD);
+        System.setProperty("APP_ENV", "development");
+        System.setProperty("DEMO_PASSWORD", "");
+        db = new Db();
+        db.init();
+        studentId = db.account("Student One", "student@test.edu", "student", PASSWORD);
+        db.account("Student Two", "other@test.edu", "student", PASSWORD);
+        recruiterId = db.account("Recruiter", "recruiter@test.edu", "recruiter", PASSWORD);
+        tomcat = new Tomcat();
+        tomcat.setBaseDir(temp.resolve("tomcat").toString());
+        tomcat.setPort(0);
+        tomcat.getConnector();
+        var context = tomcat.addWebapp("", Path.of("src/main/webapp").toAbsolutePath().toString());
+        context.setParentClassLoader(PortalTest.class.getClassLoader());
+        tomcat.start();
+        base = "http://127.0.0.1:" + tomcat.getConnector().getLocalPort() + "/app";
+        student = login("student@test.edu");
+        other = login("other@test.edu");
+        recruiter = login("recruiter@test.edu");
+        admin = login("admin@test.edu");
+    }
+
+    @AfterAll
+    static void stop() throws Exception {
+        if (tomcat != null) {
+            tomcat.stop();
+            tomcat.destroy();
+        }
+        if (temp != null)
+            try (var paths = Files.walk(temp)) {
+                paths.sorted(Comparator.reverseOrder()).forEach(p -> {
+                    try {
+                        Files.deleteIfExists(p);
+                    } catch (Exception ignored) {
+                    }
+                });
+            }
+    }
+
+    @Test
+    void passwordHashing() throws Exception {
+        String hash = Security.hash(PASSWORD);
+        assertNotEquals(PASSWORD, hash);
+        assertTrue(Security.verify(PASSWORD, hash));
+        assertFalse(Security.verify("incorrect", hash));
+        assertNotEquals(hash, Security.hash(PASSWORD));
+    }
+
+    @Test
+    void loginCsrfRolesAndSession() throws Exception {
+        Browser b = new Browser();
+        assertEquals(403,
+                b.post("/login", Map.of("email", "student@test.edu", "password", PASSWORD)).statusCode());
+        b.get("/login");
+        assertEquals(401,
+                b.post("/login", Map.of("email", "student@test.edu", "password", "wrong")).statusCode());
+        assertEquals(403, student.get("/users").statusCode());
+        assertEquals(403, student.get("/new-job").statusCode());
+        assertEquals(200, admin.get("/users").statusCode());
+        Browser fresh = login("student@test.edu");
+        assertEquals(302, fresh.post("/logout", Map.of()).statusCode());
+        assertEquals(302, fresh.get("/dashboard").statusCode());
+    }
+
+    @Test
+    void registrationCannotEscalateAndPreventsDuplicate() throws Exception {
+        Browser b = new Browser();
+        b.get("/register");
+        assertEquals(302, b.post("/register",
+                Map.of("name", "New Student", "email", "new@test.edu", "password", PASSWORD, "role", "admin"))
+                .statusCode());
+        assertEquals("student", db.one("SELECT role FROM users WHERE email=?", "new@test.edu").get("role"));
+        Browser c = new Browser();
+        c.get("/register");
+        assertEquals(409,
+                c.post("/register",
+                        Map.of("name", "Duplicate", "email", "new@test.edu", "password", PASSWORD))
+                        .statusCode());
+    }
+
+    @Test
+    void validationPaginationAndEscaping() throws Exception {
+        assertEquals(400, student.get("/jobs?page=0").statusCode());
+        assertEquals(400, student
+                .post("/profile", Map.of("name", "Student", "branch", "CSE", "cgpa", "99", "skills", ""))
+                .statusCode());
+        assertEquals(302, student.post("/profile",
+                Map.of("name", "<script>alert(1)</script>", "branch", "CSE", "cgpa", "8.4", "skills", "Java"))
+                .statusCode());
+        String body = student.get("/profile").body();
+        assertTrue(body.contains("&lt;script&gt;"));
+        assertFalse(body.contains("value=\"<script>"));
+        assertEquals(200, student.get("/jobs?q=%25").statusCode());
+    }
+
+    @Test
+    void jobApplicationUploadAndOwnership() throws Exception {
+        student.get("/profile");
+        assertEquals(400, student.upload("not a pdf".getBytes(), "resume.pdf").statusCode());
+        assertEquals(400, student.upload(new byte[5 * 1024 * 1024 + 1], "big.pdf").statusCode());
+        assertEquals(302, student.upload("%PDF-1.4\n%%EOF".getBytes(), "resume.pdf").statusCode());
+        assertEquals(200, student.get("/resume").statusCode());
+        assertEquals(403, other.get("/resume?student=" + studentId).statusCode());
+        assertEquals(302,
+                student.post("/profile",
+                        Map.of("name", "Student One", "branch", "CSE", "cgpa", "8.5", "skills", "Java"))
+                        .statusCode());
+        var fields = new HashMap<>(Map.of("title", "Software Intern", "company", "Company", "location",
+                "Remote", "kind", "Internship", "description",
+                "A meaningful software internship for students.", "min_cgpa", "7", "branch", "CSE", "stipend",
+                "20000 / month", "deadline", java.time.LocalDate.now().plusDays(30).toString()));
+        assertEquals(403, student.post("/jobs", fields).statusCode());
+        assertEquals(302, recruiter.post("/jobs", fields).statusCode());
+        long job = ((Number) db.one("SELECT MAX(id) AS id FROM jobs").get("id")).longValue();
+        assertEquals(302, student.post("/apply", Map.of("job", String.valueOf(job))).statusCode());
+        assertEquals(409, student.post("/apply", Map.of("job", String.valueOf(job))).statusCode());
+        assertEquals(403, other.post("/apply", Map.of("job", String.valueOf(job))).statusCode());
+        assertEquals(200, recruiter.get("/resume?student=" + studentId).statusCode());
+        long app = ((Number) db
+                .one("SELECT id FROM applications WHERE job_id=? AND student_id=?", job, studentId).get("id"))
+                .longValue();
+        db.account("Other Recruiter", "other-recruiter@test.edu", "recruiter", PASSWORD);
+        Browser r2 = login("other-recruiter@test.edu");
+        assertEquals(403, r2.post("/status", Map.of("application", String.valueOf(app), "status", "Selected"))
+                .statusCode());
+        assertEquals(302,
+                recruiter.post("/status", Map.of("application", String.valueOf(app), "status", "Shortlisted"))
+                        .statusCode());
+        assertEquals("Shortlisted", db.one("SELECT status FROM applications WHERE id=?", app).get("status"));
+        assertEquals(200, student.get("/applications").statusCode());
+        assertEquals(200, recruiter.get("/applications").statusCode());
+    }
+
+    @Test
+    void allMainJspPagesRender() throws Exception {
+        for (String route : List.of("/dashboard", "/jobs", "/profile", "/applications"))
+            assertEquals(200, student.get(route).statusCode(), route);
+        assertEquals(200, recruiter.get("/new-job").statusCode());
+        assertEquals(200, admin.get("/users").statusCode());
+        assertEquals(404, student.get("/missing").statusCode());
+    }
 }

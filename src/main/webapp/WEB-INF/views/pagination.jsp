@@ -1,2 +1,13 @@
 <%@ page pageEncoding="UTF-8" %>
-<%long pg=((Number)request.getAttribute("page")).longValue(),pages=((Number)request.getAttribute("pages")).longValue();String query=request.getAttribute("q")==null?"":"&q="+java.net.URLEncoder.encode((String)request.getAttribute("q"),java.nio.charset.StandardCharsets.UTF_8);%><nav class="pagination-bar" aria-label="Pagination"><span><%=request.getAttribute("total")%> records · Page <%=pg%> of <%=pages%></span><div><%if(pg>1){%><a class="btn btn-light" href="?page=<%=pg-1%><%=Security.html(query)%>">Previous</a><%}%><%if(pg<pages){%><a class="btn btn-light" href="?page=<%=pg+1%><%=Security.html(query)%>">Next</a><%}%></div></nav>
+<%
+  long pg=((Number)request.getAttribute("page")).longValue(),pages=((Number)request.getAttribute("pages")).longValue();
+  String query=request.getAttribute("q")==null?"":"&q="+java.net.URLEncoder.encode((String)request.getAttribute("q"),java.nio.charset.StandardCharsets.UTF_8);
+%>
+<nav class="pagination-bar" aria-label="Pagination">
+  <span><%=request.getAttribute("total")%> records · Page <%=pg%> of <%=pages%></span>
+  <div>
+    <% if(pg>1){ %><a
+      class="btn btn-light" href="?page=<%=pg-1%><%=Security.html(query)%>">Previous</a><% } %><% if(pg<pages){ %><a
+      class="btn btn-light" href="?page=<%=pg+1%><%=Security.html(query)%>">Next</a><% } %>
+  </div>
+</nav>

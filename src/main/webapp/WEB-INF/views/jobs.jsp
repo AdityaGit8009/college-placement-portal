@@ -1,4 +1,29 @@
 <%@ page pageEncoding="UTF-8" %>
 <%@ include file="header.jsp" %>
-<div class="section-head"><div><h1 class="page-title">Find your next beginning.</h1><p class="text-secondary mb-0">Internships and careers with room to grow.</p></div><%if(staff){%><a class="btn btn-primary" href="<%=base%>/new-job">Post opportunity</a><%}%></div><form method="get" class="search-bar" id="searchForm"><label class="visually-hidden" for="search">Search roles or companies</label><input id="search" class="form-control" name="q" placeholder="Search a role or company…" value="<%=Security.html(request.getAttribute("q"))%>" maxlength="100"><button class="btn btn-primary">Search</button></form><p id="searchStatus" class="text-secondary" role="status"></p><div id="jobResults"><div class="row g-3"><%var jobs=(List<Map<String,Object>>)request.getAttribute("jobs");for(var j:jobs){%><%@ include file="job-card.jsp" %><%}if(jobs.isEmpty()){%><div class="col-12"><div class="empty">No opportunities match your search. Try another company or role.</div></div><%}%></div><%@ include file="pagination.jsp" %></div>
+<div class="section-head">
+  <div>
+    <h1 class="page-title">Find your next beginning.</h1>
+    <p class="text-secondary mb-0">Internships and careers with room to grow.</p>
+  </div>
+  <% if(staff){ %><a class="btn btn-primary" href="<%=base%>/new-job">Post opportunity</a><% } %>
+</div>
+<form method="get" class="search-bar" id="searchForm">
+  <label class="visually-hidden" for="search">Search roles or companies</label><input
+    id="search" class="form-control" name="q" placeholder="Search a role or company…" value="<%=Security.html(request.getAttribute("q"))%>" maxlength="100"><button
+    class="btn btn-primary">Search</button>
+</form>
+<p id="searchStatus" class="text-secondary" role="status"></p>
+<div id="jobResults">
+  <div class="row g-3">
+    <%
+      var jobs=(List<Map<String,Object>>)request.getAttribute("jobs");
+      for(var j:jobs){
+    %><%@ include file="job-card.jsp" %><% }if(jobs.isEmpty()){ %>
+    <div class="col-12">
+      <div class="empty">No opportunities match your search. Try another company or role.</div>
+    </div>
+    <% } %>
+  </div>
+  <%@ include file="pagination.jsp" %>
+</div>
 <%@ include file="footer.jsp" %>

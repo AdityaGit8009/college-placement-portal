@@ -1,12 +1,12 @@
 <Server port="-1">
- <Listener className="org.apache.catalina.startup.VersionLoggerListener" />
- <Service name="Catalina">
-  <Connector port="8080" protocol="HTTP/1.1" connectionTimeout="20000" maxPostSize="5400000" server="Launchpad" />
-  <Engine name="Catalina" defaultHost="localhost">
-   <Host name="localhost" appBase="webapps" unpackWARs="true" autoDeploy="false">
-    <Valve className="org.apache.catalina.valves.RemoteIpValve" remoteIpHeader="x-forwarded-for" protocolHeader="x-forwarded-proto" />
-    <Valve className="org.apache.catalina.valves.AccessLogValve" directory="logs" prefix="access" suffix=".log" pattern="%h %t &quot;%m %U %H&quot; %s %D" />
-   </Host>
-  </Engine>
- </Service>
+  <Listener className="org.apache.catalina.startup.VersionLoggerListener"/>
+  <Service name="Catalina">
+    <Connector port="8080" protocol="HTTP/1.1" connectionTimeout="20000" maxPostSize="5400000" server="Launchpad"/>
+    <Engine name="Catalina" defaultHost="localhost">
+      <Host name="localhost" appBase="webapps" unpackWARs="true" autoDeploy="false">
+        <Valve className="org.apache.catalina.valves.RemoteIpValve" remoteIpHeader="x-forwarded-for" protocolHeader="x-forwarded-proto"/>
+        <Valve className="org.apache.catalina.valves.AccessLogValve" directory="logs" prefix="access" suffix=".log" pattern="%h %t &quot;%m %U %H&quot; %s %D"/>
+      </Host>
+    </Engine>
+  </Service>
 </Server>
