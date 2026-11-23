@@ -1,0 +1,2 @@
+Local source commit: 94952b66503bde415fd57b94705c98a5c7ec758e
+Git metadata is omitted from the distribution ZIP. Run git init after extraction.

@@ -1,0 +1,7 @@
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd" version="6.0">
+ <display-name>Launchpad Placement Portal</display-name>
+ <servlet><servlet-name>portal</servlet-name><servlet-class>edu.campus.AppServlet</servlet-class><load-on-startup>1</load-on-startup><multipart-config><max-file-size>5242880</max-file-size><max-request-size>5300000</max-request-size><file-size-threshold>0</file-size-threshold></multipart-config></servlet>
+ <servlet-mapping><servlet-name>portal</servlet-name><url-pattern>/app/*</url-pattern></servlet-mapping>
+ <session-config><session-timeout>60</session-timeout><cookie-config><http-only>true</http-only></cookie-config><tracking-mode>COOKIE</tracking-mode></session-config>
+ <error-page><error-code>404</error-code><location>/WEB-INF/views/not-found.jsp</location></error-page>
+</web-app>

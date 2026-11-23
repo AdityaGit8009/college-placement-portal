@@ -1,0 +1,9 @@
+node_modules/
+target/
+.env
+data/
+uploads/
+logs/
+coverage/
+*.log
+.DS_Store

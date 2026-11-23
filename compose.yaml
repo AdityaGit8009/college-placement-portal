@@ -1,0 +1,21 @@
+services:
+  app:
+    build: .
+    environment:
+      APP_ENV: development
+      DB_URL: jdbc:h2:file:/data/placement
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      UPLOAD_DIR: /uploads
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@college.test}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}
+      DEMO_PASSWORD: ${DEMO_PASSWORD:-}
+    ports:
+      - '127.0.0.1:8080:8080'
+    volumes:
+      - placement-data:/data
+      - resumes:/uploads
+    init: true
+    restart: unless-stopped
+volumes:
+  placement-data:
+  resumes:
